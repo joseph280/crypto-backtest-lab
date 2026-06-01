@@ -65,21 +65,34 @@ def sample_positions(matrix: pd.DataFrame) -> dict:
 
 # --------------------------------------------------------------- data
 
-def ensure_data(coin: str, interval: str, settings, force_synthetic: bool, min_bars: int) -> None:
+def ensure_data(
+    coin: str, interval: str, settings, force_synthetic: bool, min_bars: int, edge_strength: float = 0.0
+) -> None:
     """Make sure a usable lake exists. If missing or too short for walk-forward,
-    generate a synthetic lake large enough to demonstrate every splitter."""
+    generate a synthetic lake large enough to demonstrate every splitter.
+
+    edge_strength > 0 always regenerates the lake with a planted teaching edge
+    (see data/synthetic.generate_candles), so the harness has a real signal to
+    accept rather than only noise to reject.
+    """
     from cbt_lab.data.collectors import candles_path
     from cbt_lab.data.synthetic import generate_lake
 
     path = candles_path(coin, interval, settings)
     enough = False
-    if path.exists() and not force_synthetic:
+    if path.exists() and not force_synthetic and edge_strength == 0.0:
         enough = len(load_candles(coin, interval, settings)) >= min_bars
-    if force_synthetic or not enough:
+    if force_synthetic or edge_strength > 0.0 or not enough:
         # 540 days of hourly data comfortably fits a 180/30 walk-forward.
         days = max(settings.data.history_days, 540)
-        logger.warning("Using SYNTHETIC data ({} days). Not market data, no edge.", days)
-        generate_lake(settings=settings, days=days)
+        if edge_strength > 0.0:
+            logger.warning(
+                "Using SYNTHETIC data ({} days) with a PLANTED teaching edge "
+                "(strength={}). Not market data.", days, edge_strength
+            )
+        else:
+            logger.warning("Using SYNTHETIC data ({} days). Not market data, no edge.", days)
+        generate_lake(settings=settings, days=days, edge_strength=edge_strength)
 
 
 # --------------------------------------------------------------- main
@@ -89,6 +102,15 @@ def main() -> None:
     parser.add_argument("--coin", default="BTC")
     parser.add_argument("--interval", default="1h")
     parser.add_argument("--synthetic", action="store_true", help="Force synthetic data.")
+    parser.add_argument(
+        "--planted-edge",
+        nargs="?",
+        type=float,
+        const=0.004,
+        default=0.0,
+        help="Regenerate synthetic data with a planted teaching momentum edge so the "
+        "acceptance gate can PASS. Optional float sets the per-bar drift (default 0.004).",
+    )
     args = parser.parse_args()
 
     settings = load_settings()
@@ -98,7 +120,7 @@ def main() -> None:
     from cbt_lab.validation.walk_forward import bars_per_day
     bpd = bars_per_day(interval)
     min_bars = int((settings.validation.walk_forward.train_days + 2 * settings.validation.walk_forward.test_days) * bpd)
-    ensure_data(coin, interval, settings, args.synthetic, min_bars)
+    ensure_data(coin, interval, settings, args.synthetic, min_bars, edge_strength=args.planted_edge)
 
     logger.info("Building features and labels for {} {}", coin, interval)
     matrix = build_features(coin, interval, settings)

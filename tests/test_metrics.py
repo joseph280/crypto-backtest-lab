@@ -6,6 +6,7 @@ import pandas as pd
 from cbt_lab.validation.cpcv import cpcv_splits, make_groups, n_paths
 from cbt_lab.validation.metrics import (
     annualized_sharpe,
+    check_acceptance,
     compute_trust_numbers,
     is_oos_degradation_pct,
     sharpe_per_period,
@@ -48,6 +49,25 @@ def test_trust_numbers_are_scalars_and_finite():
         assert np.isscalar(v) and np.isfinite(v), f"{key} not a finite scalar: {v}"
     assert 0.0 <= tn.pbo <= 1.0
     assert tn.n_trials == trials.shape[1]
+
+
+def test_acceptance_gate_passes_on_a_clear_edge():
+    # The mirror of the rejection case: when one configuration carries a real,
+    # persistent edge among noise variants, the gate should ACCEPT it. This is
+    # the "not failing" path of the harness.
+    rng = np.random.default_rng(7)
+    T = 1500
+    data = {f"noise_{i}": rng.standard_normal(T) * 0.01 for i in range(6)}
+    data["edge"] = rng.standard_normal(T) * 0.004 + 0.0025  # low-variance, persistent edge
+    trials = pd.DataFrame(data)
+
+    tn = compute_trust_numbers(trials, interval="1h", cscv_chunks=8)
+    result = check_acceptance(tn)
+
+    assert result.passed, f"expected PASS, got reasons: {result.reasons}"
+    assert tn.oos_sharpe >= 0.8
+    assert tn.pbo <= 0.40
+    assert tn.deflated_sharpe > 0.5
 
 
 def test_pbo_higher_for_pure_noise_than_for_clear_edge():

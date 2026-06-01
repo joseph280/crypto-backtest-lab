@@ -26,10 +26,24 @@ def _coin_seed(coin: str) -> int:
 
 
 def generate_candles(
-    coin: str, interval: str, n_bars: int, end_ms: int, start_price: float = 100.0, seed: int = 0
+    coin: str,
+    interval: str,
+    n_bars: int,
+    end_ms: int,
+    start_price: float = 100.0,
+    seed: int = 0,
+    edge_strength: float = 0.0,
+    edge_switch_prob: float = 0.005,
 ) -> pd.DataFrame:
     """A seeded geometric random walk with mild volatility clustering and a
     daily seasonal in volume. Reproducible for a given (coin, interval, seed).
+
+    edge_strength > 0 plants a DELIBERATE, clearly-labelled momentum edge: a
+    slowly-switching hidden regime (sign flips with probability edge_switch_prob
+    per bar) adds a persistent per-bar drift of regime * edge_strength to the
+    returns. This is a teaching device so the validation harness has something
+    real to accept; it is not market structure and carries no meaning beyond
+    this synthetic series.
     """
     rng = np.random.default_rng(seed + _coin_seed(coin) + interval_to_ms(interval))
     step = interval_to_ms(interval)
@@ -40,6 +54,12 @@ def generate_candles(
     vol_state = base_sigma * (1.0 + 0.5 * np.sin(np.linspace(0, 12 * np.pi, n_bars)))
     shocks = rng.standard_normal(n_bars)
     log_ret = vol_state * shocks
+    if edge_strength > 0.0:
+        # Hidden regime: start at +1, flip sign at random bars. Persistent, so a
+        # momentum strategy that follows it trades rarely and survives costs.
+        flips = rng.random(n_bars) < edge_switch_prob
+        regime = np.cumprod(np.where(flips, -1.0, 1.0))
+        log_ret = log_ret + regime * edge_strength
     close = start_price * np.exp(np.cumsum(log_ret))
     open_ = np.empty(n_bars)
     open_[0] = start_price
@@ -97,8 +117,13 @@ def generate_lake(
     root: Optional[Path] = None,
     end_ms: Optional[int] = None,
     seed: int = 0,
+    edge_strength: float = 0.0,
 ) -> None:
-    """Populate the parquet lake with synthetic candles and funding."""
+    """Populate the parquet lake with synthetic candles and funding.
+
+    edge_strength > 0 plants the teaching momentum edge described in
+    generate_candles, so the validation harness has a genuine signal to accept.
+    """
     settings = settings or load_settings()
     coins = coins or settings.symbols.core
     days = days or settings.data.history_days
@@ -117,7 +142,9 @@ def generate_lake(
         for interval in settings.data.intervals:
             step = interval_to_ms(interval)
             n_bars = max(2, days * 86_400_000 // step)
-            cdf = generate_candles(coin, interval, int(n_bars), end, start_price=sp, seed=seed)
+            cdf = generate_candles(
+                coin, interval, int(n_bars), end, start_price=sp, seed=seed, edge_strength=edge_strength
+            )
             cpath = candles_path(coin, interval, settings, root)
             cpath.parent.mkdir(parents=True, exist_ok=True)
             cdf.to_parquet(cpath, index=False)

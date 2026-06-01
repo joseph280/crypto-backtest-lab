@@ -48,6 +48,33 @@ near-zero Deflated Sharpe and an OOS Sharpe far below the required threshold.
 That is the point: the infrastructure is honest enough to tell you when there is
 nothing there. (Exact numbers vary with the synthetic seed and config.)
 
+### The other direction: accepting a real edge
+
+A rejection-only demo proves only half the harness. To show it *accepts* a
+genuine signal, the data generator can plant a deliberate, clearly-labelled
+momentum edge (a slowly-switching hidden regime — see `--planted-edge`):
+
+```bash
+uv run python scripts/run_backtest.py --planted-edge
+```
+
+```
+THE THREE TRUST NUMBERS (net of fees, funding, slippage)
+  1. Deflated Sharpe Ratio (DSR):      1.000   (higher is better)
+  2. Probability of Backtest Overfit:  0.000   (lower is better)
+  3. IS -> OOS Sharpe degradation:     3.9%  (lower is better)
+================================================================
+  out-of-sample annualized Sharpe:     71.28
+================================================================
+acceptance gate (config thresholds): PASS
+```
+
+Now all three numbers are good and the gate **passes**. The Sharpe is
+deliberately cartoonish because the edge is hand-planted into the synthetic
+series — it is a teaching device, not market structure, and carries no meaning
+beyond this data. The same accept path is asserted in
+`tests/test_metrics.py::test_acceptance_gate_passes_on_a_clear_edge`.
+
 ## What it demonstrates
 
 - **Leakage-safe feature engineering.** Every transform is causal (rolling /
@@ -76,14 +103,16 @@ Requires [uv](https://docs.astral.sh/uv) and Python 3.12.
 
 ```bash
 uv sync
-uv run python scripts/run_backtest.py --synthetic
+uv run python scripts/run_backtest.py --synthetic       # noise -> gate FAILS (correct)
+uv run python scripts/run_backtest.py --planted-edge     # real edge -> gate PASSES
 uv run pytest -q
 ```
 
 `run_backtest.py` generates a synthetic data lake if none exists (a seeded
 geometric random walk with volatility clustering and mean-reverting funding —
 clearly labelled, not market data), then runs the full pipeline and prints the
-report above.
+report. `--synthetic` shows the harness rejecting noise; `--planted-edge`
+regenerates the data with a deliberate teaching edge so the harness accepts it.
 
 ## Layout
 
