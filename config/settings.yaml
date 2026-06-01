@@ -1,0 +1,61 @@
+# xortcut-backtest-lab configuration
+# Offline research subset: data, features, labeling, backtest costs, validation.
+# Every number the pipeline uses is read from here, never hardcoded.
+
+project:
+  name: xortcut-backtest-lab
+
+# ---------------------------------------------------------------- symbols
+symbols:
+  core:
+    - BTC
+    - ETH
+
+# ---------------------------------------------------------------- risk
+risk:
+  prefer_maker: true            # use the maker fee (0.015%) rather than taker (0.045%)
+
+# ---------------------------------------------------------------- labeling (triple-barrier)
+labeling:
+  method: triple_barrier
+  up_mult: 1.5                  # upper barrier = price * (1 + up_mult * vol)
+  dn_mult: 1.5                  # lower barrier = price * (1 - dn_mult * vol)
+  max_holding_bars: 24          # vertical (time) barrier, in bars
+  vol_window: 50                # bars used to estimate recent volatility
+
+# ---------------------------------------------------------------- features
+features:
+  technical: true               # family A: commodity, table stakes
+  microstructure: true          # family B: funding / open-interest / basis
+  context: true                 # family C: realized vol, session, BTC-as-feature-for-ETH
+
+# ---------------------------------------------------------------- backtest costs
+backtest:
+  fee_taker_pct: 0.045
+  fee_maker_pct: 0.015
+  funding_settlement: hourly
+  slippage_model: spread_plus_impact
+  slippage_bps: 3
+
+# ---------------------------------------------------------------- validation
+validation:
+  walk_forward:
+    train_days: 180
+    test_days: 30
+  cpcv:
+    n_groups: 6                 # combinatorial purged cross-validation groups
+    embargo_bars: 24            # embargo around each test fold
+  purge: true
+  acceptance:
+    min_oos_sharpe: 0.8         # net of costs, out-of-sample
+    max_pbo: 0.40               # probability of backtest overfitting, lower is better
+    max_is_oos_degradation_pct: 40
+
+# ---------------------------------------------------------------- data
+data:
+  intervals:
+    - 15m
+    - 1h
+  history_days: 365
+  storage_path: data/parquet
+  timezone: UTC

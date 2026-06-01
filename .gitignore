@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Data lake (generated synthetic parquet candles and funding)
+/data/
+
+# Logs
+/logs/
+*.log
+
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/

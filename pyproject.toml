@@ -1,0 +1,30 @@
+[project]
+name = "xortcut-backtest-lab"
+version = "0.1.0"
+description = "An offline, cost-aware backtest and overfitting-validation lab for crypto perpetual-futures strategies."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "loguru>=0.7.3",
+    "numba>=0.60,<0.61",
+    "numpy<2.0",
+    "pandas<2.3",
+    "pyarrow>=18.0.0",
+    "pydantic>=2.10",
+    "pyyaml>=6.0.3",
+    "ta>=0.11.0",
+    "vectorbt>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["xortcut"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
