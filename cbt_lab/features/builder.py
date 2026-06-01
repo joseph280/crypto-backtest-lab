@@ -23,10 +23,10 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from xortcut.config import Settings, load_settings
-from xortcut.data import microstructure as ms
-from xortcut.data.collectors import asset_ctx_path, candles_path, funding_path
-from xortcut.features.indicators import technical_features
+from cbt_lab.config import Settings, load_settings
+from cbt_lab.data import microstructure as ms
+from cbt_lab.data.collectors import asset_ctx_path, candles_path, funding_path
+from cbt_lab.features.indicators import technical_features
 
 # Columns that are raw market data or bookkeeping, not model features.
 META_COLUMNS = ["open_time", "close_time", "timestamp", "open", "high", "low", "close", "volume", "trades"]

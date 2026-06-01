@@ -3,14 +3,14 @@
 import numpy as np
 import pandas as pd
 
-from xortcut.validation.cpcv import cpcv_splits, make_groups, n_paths
-from xortcut.validation.metrics import (
+from cbt_lab.validation.cpcv import cpcv_splits, make_groups, n_paths
+from cbt_lab.validation.metrics import (
     annualized_sharpe,
     compute_trust_numbers,
     is_oos_degradation_pct,
     sharpe_per_period,
 )
-from xortcut.validation.walk_forward import apply_purge_embargo, walk_forward_splits
+from cbt_lab.validation.walk_forward import apply_purge_embargo, walk_forward_splits
 
 
 def _trial_matrix(T=400, n_noise=8, edge_mean=0.0015, seed=0):

@@ -4,7 +4,7 @@ This is where the effort goes. These are the crypto-native, under-crowded signal
 that justify the whole approach: funding and its trend, open-interest change, the
 basis between perp and spot/mark, order-book imbalance, taker flow, and
 liquidation activity. Most retail bots ignore these in favour of chart
-indicators; Xortcut reads microstructure.
+indicators; this project reads microstructure.
 
 Causality is non-negotiable. Every function here is causal: the value at row t
 uses only rows at or before t. In particular, all standardization is rolling

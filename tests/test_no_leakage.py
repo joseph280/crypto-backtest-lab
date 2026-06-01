@@ -16,9 +16,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from xortcut.config import load_settings
-from xortcut.data.synthetic import generate_candles, generate_funding
-from xortcut.features.builder import build_features_from_frames, feature_columns
+from cbt_lab.config import load_settings
+from cbt_lab.data.synthetic import generate_candles, generate_funding
+from cbt_lab.features.builder import build_features_from_frames, feature_columns
 
 TOL = 1e-9
 

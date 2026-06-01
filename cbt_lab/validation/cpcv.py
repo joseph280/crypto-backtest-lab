@@ -19,8 +19,8 @@ from typing import List, NamedTuple, Optional
 
 import numpy as np
 
-from xortcut.config import Settings, load_settings
-from xortcut.validation.walk_forward import apply_purge_embargo
+from cbt_lab.config import Settings, load_settings
+from cbt_lab.validation.walk_forward import apply_purge_embargo
 
 
 class CpcvSplit(NamedTuple):

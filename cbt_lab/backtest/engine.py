@@ -19,9 +19,9 @@ import numpy as np
 import pandas as pd
 import vectorbt as vbt
 
-from xortcut.backtest.costs import CostModel, funding_return
-from xortcut.config import Settings, load_settings
-from xortcut.data.collectors import interval_to_ms
+from cbt_lab.backtest.costs import CostModel, funding_return
+from cbt_lab.config import Settings, load_settings
+from cbt_lab.data.collectors import interval_to_ms
 
 
 def position_to_signals(position: pd.Series) -> Tuple[pd.Series, pd.Series, pd.Series, pd.Series]:

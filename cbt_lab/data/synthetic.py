@@ -17,8 +17,8 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from xortcut.config import Settings, load_settings
-from xortcut.data.collectors import candles_path, funding_path, interval_to_ms
+from cbt_lab.config import Settings, load_settings
+from cbt_lab.data.collectors import candles_path, funding_path, interval_to_ms
 
 
 def _coin_seed(coin: str) -> int:

@@ -17,7 +17,7 @@ from typing import Optional
 
 import pandas as pd
 
-from xortcut.config import Settings, load_settings
+from cbt_lab.config import Settings, load_settings
 
 
 @dataclass

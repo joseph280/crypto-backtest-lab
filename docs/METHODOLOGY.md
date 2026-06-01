@@ -2,7 +2,7 @@
 
 The three "trust numbers" reported by the validation harness, and the
 leakage-control techniques behind them. The two statistics in
-`xortcut/validation/metrics.py` are implemented from their original definitions
+`cbt_lab/validation/metrics.py` are implemented from their original definitions
 (no third-party statistics library), so this document is also the spec for that
 code.
 

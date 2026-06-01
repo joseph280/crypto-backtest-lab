@@ -3,8 +3,8 @@
 import numpy as np
 import pandas as pd
 
-from xortcut.backtest.costs import CostModel, funding_return, turnover
-from xortcut.backtest.engine import position_to_signals, run_backtest
+from cbt_lab.backtest.costs import CostModel, funding_return, turnover
+from cbt_lab.backtest.engine import position_to_signals, run_backtest
 
 
 def test_funding_sign_and_proration():

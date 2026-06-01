@@ -21,8 +21,8 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-from xortcut.config import Settings, load_settings
-from xortcut.validation.metrics import bars_per_year
+from cbt_lab.config import Settings, load_settings
+from cbt_lab.validation.metrics import bars_per_year
 
 Split = Tuple[np.ndarray, np.ndarray]
 

@@ -1,4 +1,4 @@
-# xortcut-backtest-lab
+# crypto-backtest-lab
 
 A small, self-contained **backtest and overfitting-validation lab** for crypto
 perpetual-futures strategies. It runs entirely offline on synthetic data: no API
@@ -21,7 +21,7 @@ fool.
 
 ```
 ================================================================
-Xortcut Stage 0 validation harness report
+Backtest validation harness report
 ================================================================
 data:           BTC 1h, 12889 labeled bars
 configs tried:  8 (sample demonstration signals)
@@ -88,7 +88,7 @@ report above.
 ## Layout
 
 ```
-xortcut/
+cbt_lab/
   config.py              # typed settings loader (pydantic)
   data/
     synthetic.py         # seeded synthetic candles + funding (offline data source)

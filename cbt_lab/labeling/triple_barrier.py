@@ -31,7 +31,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from xortcut.config import Settings, load_settings
+from cbt_lab.config import Settings, load_settings
 
 
 def realized_vol(close: pd.Series, window: int) -> pd.Series:

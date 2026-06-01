@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from xortcut.labeling.triple_barrier import realized_vol, triple_barrier_labels
+from cbt_lab.labeling.triple_barrier import realized_vol, triple_barrier_labels
 
 
 def test_rising_series_hits_upper():

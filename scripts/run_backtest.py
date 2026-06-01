@@ -22,13 +22,13 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-from xortcut.backtest.engine import run_backtest
-from xortcut.config import load_settings
-from xortcut.features.builder import build_features, load_candles
-from xortcut.labeling.triple_barrier import label_matrix
-from xortcut.validation.cpcv import cpcv_from_config, n_paths
-from xortcut.validation.metrics import annualized_sharpe, check_acceptance, compute_trust_numbers
-from xortcut.validation.walk_forward import walk_forward_from_config
+from cbt_lab.backtest.engine import run_backtest
+from cbt_lab.config import load_settings
+from cbt_lab.features.builder import build_features, load_candles
+from cbt_lab.labeling.triple_barrier import label_matrix
+from cbt_lab.validation.cpcv import cpcv_from_config, n_paths
+from cbt_lab.validation.metrics import annualized_sharpe, check_acceptance, compute_trust_numbers
+from cbt_lab.validation.walk_forward import walk_forward_from_config
 
 
 # --------------------------------------------------------------- sample signals
@@ -68,8 +68,8 @@ def sample_positions(matrix: pd.DataFrame) -> dict:
 def ensure_data(coin: str, interval: str, settings, force_synthetic: bool, min_bars: int) -> None:
     """Make sure a usable lake exists. If missing or too short for walk-forward,
     generate a synthetic lake large enough to demonstrate every splitter."""
-    from xortcut.data.collectors import candles_path
-    from xortcut.data.synthetic import generate_lake
+    from cbt_lab.data.collectors import candles_path
+    from cbt_lab.data.synthetic import generate_lake
 
     path = candles_path(coin, interval, settings)
     enough = False
@@ -95,7 +95,7 @@ def main() -> None:
     coin, interval = args.coin, args.interval
 
     # Need enough bars for a 180-day train plus a 30-day test, with headroom.
-    from xortcut.validation.walk_forward import bars_per_day
+    from cbt_lab.validation.walk_forward import bars_per_day
     bpd = bars_per_day(interval)
     min_bars = int((settings.validation.walk_forward.train_days + 2 * settings.validation.walk_forward.test_days) * bpd)
     ensure_data(coin, interval, settings, args.synthetic, min_bars)
@@ -117,7 +117,7 @@ def main() -> None:
     trials = pd.DataFrame(net_returns)
 
     # Choose the best configuration by net per-period Sharpe.
-    from xortcut.validation.metrics import sharpe_per_period
+    from cbt_lab.validation.metrics import sharpe_per_period
     sharpes = {c: sharpe_per_period(trials[c]) for c in trials.columns}
     chosen = max(sharpes, key=lambda c: (sharpes[c] if np.isfinite(sharpes[c]) else -np.inf))
 
@@ -144,7 +144,7 @@ def main() -> None:
 
     # ---------------------------------------------------------- report
     line = "=" * 64
-    print(f"\n{line}\nXortcut Stage 0 validation harness report\n{line}")
+    print(f"\n{line}\nBacktest validation harness report\n{line}")
     print(f"data:           {coin} {interval}, {len(matrix)} labeled bars")
     print(f"configs tried:  {trust.n_trials} (sample demonstration signals)")
     print(f"chosen config:  {chosen}")

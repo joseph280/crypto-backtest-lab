@@ -1,9 +1,9 @@
-# xortcut-backtest-lab configuration
+# crypto-backtest-lab configuration
 # Offline research subset: data, features, labeling, backtest costs, validation.
 # Every number the pipeline uses is read from here, never hardcoded.
 
 project:
-  name: xortcut-backtest-lab
+  name: crypto-backtest-lab
 
 # ---------------------------------------------------------------- symbols
 symbols:

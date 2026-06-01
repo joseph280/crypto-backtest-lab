@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from xortcut.config import Settings
+from cbt_lab.config import Settings
 
 # Interval string to milliseconds. Covers the common perp candle intervals.
 _INTERVAL_MS = {

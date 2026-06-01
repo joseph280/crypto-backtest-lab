@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # ----------------------------------------------------------------- paths
 
-# This file lives at <repo>/xortcut/config.py, so the repo root is two parents up.
+# This file lives at <repo>/cbt_lab/config.py, so the repo root is two parents up.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SETTINGS_PATH = PROJECT_ROOT / "config" / "settings.yaml"
 
@@ -114,7 +114,7 @@ class Data(_Base):
 
 
 class Project(_Base):
-    name: str = "xortcut-backtest-lab"
+    name: str = "crypto-backtest-lab"
 
 
 class Settings(_Base):

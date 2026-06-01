@@ -32,7 +32,7 @@ from typing import List, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from xortcut.config import Settings, load_settings
+from cbt_lab.config import Settings, load_settings
 
 _NORMAL = NormalDist()
 

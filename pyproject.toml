@@ -1,5 +1,5 @@
 [project]
-name = "xortcut-backtest-lab"
+name = "crypto-backtest-lab"
 version = "0.1.0"
 description = "An offline, cost-aware backtest and overfitting-validation lab for crypto perpetual-futures strategies."
 readme = "README.md"
@@ -22,7 +22,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["xortcut"]
+packages = ["cbt_lab"]
 
 [dependency-groups]
 dev = [
