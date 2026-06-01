@@ -1,118 +1,142 @@
+<div align="center">
+
 # crypto-backtest-lab
 
-A small, self-contained **backtest and overfitting-validation lab** for crypto
-perpetual-futures strategies. It runs entirely offline on synthetic data: no API
-keys, no venue connection, no network. One command builds features, labels them,
-runs a cost-aware backtest, and reports the statistics that tell you whether a
-backtest is trustworthy or just lucky.
+**An offline, cost-aware backtest & overfitting-validation lab for crypto perpetual-futures strategies.**
 
-This is an extracted, self-contained slice of a larger personal research
-project, published as a portfolio piece. It contains the **research
-infrastructure only** — the strategies it runs are deliberately throwaway demo
-signals, not a real edge (see [No edge here](#no-edge-here)).
+Runs end to end on synthetic data — no API keys, no venue, no network.
+One command builds features, labels them, backtests through a realistic cost model,
+and reports the statistics that tell you whether a backtest is *trustworthy* or just *lucky*.
+
+![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-25%20passing-brightgreen)
+![Dependencies](https://img.shields.io/badge/deps-numpy%20·%20pandas%20·%20vectorbt-orange)
+![Managed with uv](https://img.shields.io/badge/managed%20with-uv-DE5FE9)
+
+</div>
+
+---
 
 ## Why it exists
 
-Most retail backtests lie. They report a beautiful Sharpe ratio that evaporates
-the moment real fees, funding, and slippage are applied, or that was cherry-picked
-from hundreds of silent variations. This project is built around the opposite
-discipline: a backtest you can trust, measured by three numbers that are hard to
-fool.
+Most retail backtests lie. They report a beautiful Sharpe ratio that evaporates the
+moment real fees, funding, and slippage are applied — or that was quietly cherry-picked
+from hundreds of variations. This project is built around the opposite discipline: a
+backtest you can *trust*, measured by three numbers that are hard to fool, and a
+validation pipeline engineered to refuse to leak the future into the past.
 
-```
-================================================================
-Backtest validation harness report
-================================================================
-data:           BTC 1h, 12889 labeled bars
-configs tried:  8 (sample demonstration signals)
-chosen config:  fundfade_0.5
-walk-forward:   11 purged folds
-CPCV:           15 splits, 5 backtest paths
-================================================================
-THE THREE TRUST NUMBERS (net of fees, funding, slippage)
-  1. Deflated Sharpe Ratio (DSR):      0.001   (higher is better)
-  2. Probability of Backtest Overfit:  0.155   (lower is better)
-  3. IS -> OOS Sharpe degradation:     -132.6%  (lower is better)
-================================================================
-  in-sample annualized Sharpe:         -0.84
-  out-of-sample annualized Sharpe:     0.27
-  probability of OOS loss:             0.989
-================================================================
-acceptance gate (config thresholds): FAIL
-  - OOS Sharpe 0.27 < required 0.8
-  (expected: these are random demonstration signals with no real edge.)
+## The pipeline
+
+```mermaid
+flowchart LR
+    A["📈 Synthetic data lake<br/><sub>candles + funding</sub>"] --> B["🧮 Feature builder<br/><sub>technical · microstructure · context</sub>"]
+    B --> C["🏷️ Triple-barrier<br/>labeling<br/><sub>vol-scaled TP / SL / time</sub>"]
+    C --> D["💸 Cost-aware backtest<br/><sub>fees + slippage + funding</sub>"]
+    D --> E["🔁 Validation harness<br/><sub>walk-forward + CPCV<br/>purge + embargo</sub>"]
+    E --> F{"⚖️ Acceptance<br/>gate"}
+    F -->|"DSR · PBO · degradation<br/>all within thresholds"| G(["✅ ACCEPT"])
+    F -->|"any threshold fails"| H(["❌ REJECT"])
+
+    classDef leak stroke-dasharray:4 4;
+    class B,C leak
+    style G fill:#16a34a,color:#fff,stroke:#15803d
+    style H fill:#dc2626,color:#fff,stroke:#b91c1c
+    style F fill:#1f2937,color:#fff,stroke:#374151
 ```
 
-The harness *correctly rejects* the demo signals at the acceptance gate — here a
-near-zero Deflated Sharpe and an OOS Sharpe far below the required threshold.
-That is the point: the infrastructure is honest enough to tell you when there is
-nothing there. (Exact numbers vary with the synthetic seed and config.)
+Every stage between the data and the gate is **causal and leakage-controlled** (dashed
+boxes): rolling/trailing transforms only, microstructure aligned by a backward as-of
+join on each bar's *close* time, and purge + embargo across every train/test boundary.
 
-### The other direction: accepting a real edge
+## It works in both directions
 
-A rejection-only demo proves only half the harness. To show it *accepts* a
-genuine signal, the data generator can plant a deliberate, clearly-labelled
-momentum edge (a slowly-switching hidden regime — see `--planted-edge`):
+A backtest harness is only honest if it can do two things: **reject noise** and
+**accept a real edge**. This one does both, and you can see it in one command each.
 
-```bash
-uv run python scripts/run_backtest.py --planted-edge
+<table>
+<tr>
+<th>❌ Random signals → <code>--synthetic</code></th>
+<th>✅ Planted edge → <code>--planted-edge</code></th>
+</tr>
+<tr>
+<td>
+
+```text
+THE THREE TRUST NUMBERS
+  1. Deflated Sharpe (DSR):  0.001
+  2. Prob. Backtest Overfit: 0.155
+  3. IS -> OOS degradation: -132.6%
+
+  out-of-sample Sharpe:      0.27
+----------------------------------
+acceptance gate:           FAIL
+  - OOS Sharpe 0.27 < 0.8
 ```
 
-```
-THE THREE TRUST NUMBERS (net of fees, funding, slippage)
-  1. Deflated Sharpe Ratio (DSR):      1.000   (higher is better)
-  2. Probability of Backtest Overfit:  0.000   (lower is better)
-  3. IS -> OOS Sharpe degradation:     3.9%  (lower is better)
-================================================================
-  out-of-sample annualized Sharpe:     71.28
-================================================================
-acceptance gate (config thresholds): PASS
+The demo signals carry no edge, and the
+harness *correctly refuses* them.
+
+</td>
+<td>
+
+```text
+THE THREE TRUST NUMBERS
+  1. Deflated Sharpe (DSR):  1.000
+  2. Prob. Backtest Overfit: 0.000
+  3. IS -> OOS degradation:   3.9%
+
+  out-of-sample Sharpe:     71.28
+----------------------------------
+acceptance gate:           PASS
 ```
 
-Now all three numbers are good and the gate **passes**. The Sharpe is
-deliberately cartoonish because the edge is hand-planted into the synthetic
-series — it is a teaching device, not market structure, and carries no meaning
-beyond this data. The same accept path is asserted in
-`tests/test_metrics.py::test_acceptance_gate_passes_on_a_clear_edge`.
+A deliberately planted teaching edge —
+all three numbers good, gate passes.
+
+</td>
+</tr>
+</table>
+
+> The planted edge is a hand-injected, slowly-switching momentum regime — a teaching
+> device, clearly labelled in the code and the run log. Its cartoonish Sharpe is the
+> giveaway: it is **not** market structure and means nothing beyond this synthetic series.
 
 ## What it demonstrates
 
-- **Leakage-safe feature engineering.** Every transform is causal (rolling /
-  trailing, never full-sample). Microstructure series (funding, open interest,
-  basis) are aligned to each bar with a backward as-of join on the bar's *close*
-  time, so a bar never sees information from after it closed. Enforced by
-  `tests/test_no_leakage.py`, which asserts the feature row at time *t* is
-  identical whether computed on data up to *t* or on the full series.
-- **Triple-barrier labeling** (Lopez de Prado): volatility-scaled take-profit /
-  stop-loss / time barriers, vectorized, returning each label's exit index for
-  purging.
-- **A realistic cost model.** Maker/taker fees, slippage, and — the part most
-  backtesters skip — **funding** layered onto every bar via the vectorbt engine.
-- **Purged, embargoed validation.** Walk-forward and **Combinatorial Purged
-  Cross-Validation (CPCV)** with purge + embargo to kill label-overlap leakage
-  across the train/test boundary.
+- **Leakage-safe feature engineering** — every transform is causal; microstructure
+  (funding, open interest, basis) is aligned to each bar with a backward as-of join on
+  the bar's *close* time. Enforced by `tests/test_no_leakage.py`, which asserts the
+  feature row at time *t* is byte-identical whether computed on data up to *t* or on the
+  full series.
+- **Triple-barrier labeling** (López de Prado) — volatility-scaled take-profit /
+  stop-loss / time barriers, vectorized, returning each label's exit index for purging.
+- **A realistic cost model** — maker/taker fees, slippage, and the part most backtesters
+  skip: **funding**, layered onto every bar via the vectorbt engine.
+- **Purged, embargoed validation** — walk-forward and **Combinatorial Purged
+  Cross-Validation (CPCV)** that kill label-overlap leakage across the train/test boundary.
 - **The three trust numbers**, implemented from their original papers (see
-  [METHODOLOGY.md](docs/METHODOLOGY.md)): the **Deflated Sharpe Ratio**, the
-  **Probability of Backtest Overfitting** via CSCV, and **IS→OOS degradation**.
-- **Config-driven, no magic numbers.** Every fee, threshold, and window is read
-  from `config/settings.yaml` through a typed pydantic loader.
+  [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md)): the **Deflated Sharpe Ratio**, the
+  **Probability of Backtest Overfitting** via CSCV, and **IS→OOS degradation** — using
+  only numpy/pandas and the standard library (no scipy, no AGPL dependency).
+- **Config-driven, no magic numbers** — every fee, threshold, and window is read from
+  `config/settings.yaml` through a typed pydantic loader.
 
 ## Quick start
 
-Requires [uv](https://docs.astral.sh/uv) and Python 3.12.
+Requires [uv](https://docs.astral.sh/uv) and Python 3.12 (uv installs it for you).
 
 ```bash
 uv sync
-uv run python scripts/run_backtest.py --synthetic       # noise -> gate FAILS (correct)
+
+uv run python scripts/run_backtest.py --synthetic       # noise     -> gate FAILS (correct)
 uv run python scripts/run_backtest.py --planted-edge     # real edge -> gate PASSES
-uv run pytest -q
+uv run pytest -q                                         # 25 tests
 ```
 
-`run_backtest.py` generates a synthetic data lake if none exists (a seeded
-geometric random walk with volatility clustering and mean-reverting funding —
-clearly labelled, not market data), then runs the full pipeline and prints the
-report. `--synthetic` shows the harness rejecting noise; `--planted-edge`
-regenerates the data with a deliberate teaching edge so the harness accepts it.
+`run_backtest.py` generates a synthetic data lake on first run (a seeded geometric random
+walk with volatility clustering and mean-reverting funding — clearly labelled, not market
+data), then runs the full pipeline and prints the report.
 
 ## Layout
 
@@ -130,7 +154,7 @@ cbt_lab/
     triple_barrier.py    # volatility-scaled triple-barrier labels
   backtest/
     costs.py             # fees, slippage, funding cost model
-    engine.py            # vectorbt engine, target-position -> net returns
+    engine.py            # vectorbt engine: target position -> net returns
   validation/
     walk_forward.py      # purged + embargoed walk-forward splits
     cpcv.py              # combinatorial purged cross-validation
@@ -140,15 +164,14 @@ scripts/run_backtest.py  # end-to-end entry point
 tests/                   # incl. test_no_leakage.py
 ```
 
-## No edge here
+## A note on scope
 
-The "strategies" run by `scripts/run_backtest.py` (a funding fade, a momentum
-follow, a Bollinger mean-reversion) are **demonstration signals defined in the
-script itself**, included only to exercise the engine and the harness end to
-end. They carry no real trading edge, and the harness is expected to reject
-them. This repository is about the *plumbing and the validation discipline*, not
-a profitable system. Nothing here is financial advice.
+This is a self-contained portfolio project: research **infrastructure**, not a trading
+system. The "strategies" it runs (a funding fade, a momentum follow, a Bollinger
+mean-reversion) are throwaway demonstration signals defined inside `run_backtest.py`, with
+no real edge. The value here is the plumbing and the validation discipline. Nothing in this
+repository is financial advice.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE).
