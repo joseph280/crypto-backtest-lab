@@ -30,24 +30,25 @@ validation pipeline engineered to refuse to leak the future into the past.
 
 ```mermaid
 flowchart LR
-    A["📈 Synthetic data lake<br/><sub>candles + funding</sub>"] --> B["🧮 Feature builder<br/><sub>technical · microstructure · context</sub>"]
-    B --> C["🏷️ Triple-barrier<br/>labeling<br/><sub>vol-scaled TP / SL / time</sub>"]
-    C --> D["💸 Cost-aware backtest<br/><sub>fees + slippage + funding</sub>"]
-    D --> E["🔁 Validation harness<br/><sub>walk-forward + CPCV<br/>purge + embargo</sub>"]
-    E --> F{"⚖️ Acceptance<br/>gate"}
-    F -->|"DSR · PBO · degradation<br/>all within thresholds"| G(["✅ ACCEPT"])
-    F -->|"any threshold fails"| H(["❌ REJECT"])
+    A["📈 Synthetic data<br/>candles + funding"] --> B["🧮 Feature builder<br/>causal, leakage-safe"]
+    B --> C["🏷️ Triple-barrier<br/>labeling"]
+    C --> D["💸 Cost-aware backtest<br/>fees · slippage · funding"]
+    D --> E["🔁 Validation harness<br/>walk-forward + CPCV"]
+    E --> F{"⚖️ Acceptance gate"}
+    F -->|"DSR · PBO · degradation OK"| G(["✅ ACCEPT"])
+    F -->|"threshold fails"| H(["❌ REJECT"])
 
-    classDef leak stroke-dasharray:4 4;
+    classDef leak stroke-dasharray:5 5;
     class B,C leak
     style G fill:#16a34a,color:#fff,stroke:#15803d
     style H fill:#dc2626,color:#fff,stroke:#b91c1c
     style F fill:#1f2937,color:#fff,stroke:#374151
 ```
 
-Every stage between the data and the gate is **causal and leakage-controlled** (dashed
-boxes): rolling/trailing transforms only, microstructure aligned by a backward as-of
-join on each bar's *close* time, and purge + embargo across every train/test boundary.
+The feature and labeling stages (dashed) are **causal and leakage-controlled**:
+rolling/trailing transforms only, with microstructure aligned by a backward as-of join on
+each bar's *close* time. The validation harness adds **purge + embargo** across every
+train/test boundary, so a label's future horizon never leaks into its training set.
 
 ## It works in both directions
 
